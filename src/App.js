@@ -106,6 +106,8 @@ class App extends Component {
       };
       
       const debtOrder = await dharma.adapters.simpleInterestLoan.toDebtOrder(simpleInterestLoan);
+
+      console.log(debtOrder)
       
       this.setState({ debtOrder: JSON.stringify(debtOrder) });
   }
