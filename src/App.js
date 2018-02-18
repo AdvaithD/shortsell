@@ -11,6 +11,7 @@ import TokenTransferProxy from '../build/contracts/TokenTransferProxy.json'
 import TokenRegistry from '../build/contracts/TokenRegistry.json'
 import DebtToken from '../build/contracts/DebtToken.json'
 import TermsContractRegistry from "../build/contracts/TermsContractRegistry.json"
+import ShortTermsContract from "../build/contracts/ShortTermsContract.json"
 
 import getWeb3 from './utils/getWeb3'
 
@@ -53,6 +54,7 @@ class App extends Component {
 
       // Instantiate contract once web3 provided.
       this.instantiateDharma()
+      this.instantiateShortsell()
     })
     .catch((e) => {
       console.log('Error instantiating Dharma contracts:' + e);
@@ -154,6 +156,12 @@ class App extends Component {
     const dharma = new Dharma(this.state.web3.currentProvider, dharmaConfig);
     
     this.setState({ dharma, accounts });
+  }
+
+  async instantiateShortsell() {
+    const networkId = await promisify(this.state.web3.version.getNetwork)();
+    const termsContract = this.state.web3.eth.contract(ShortTermsContract.abi).at(ShortTermsContract.networks[networkId].address);
+    const termLength = await promisify(termsContract.TERM_LENGTH.call)();
   }
 
   render() {
