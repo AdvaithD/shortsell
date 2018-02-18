@@ -137,6 +137,9 @@ class App extends Component {
       simpleInterestLoan
     );
     this.setState({ debtOrder: JSON.stringify(debtOrder) });
+    const tomorrow = new Date();
+    const repaymentDate = new Date(tomorrow.setDate(tomorrow.getDate() + termLength));
+    console.log("Generated a Debt Order of", principalAmount," ", this.state.principalTokenSymbol," at a", interestRate,"% interest rate to be repaid on", repaymentDate)
   }
 
   async onSignDebtOrder(e) {
@@ -154,6 +157,8 @@ class App extends Component {
     const signedDebtOrder = Object.assign({ debtorSignature }, debtOrder);
     const hash = await this.state.dharma.order.getIssuanceHash(signedDebtOrder);
     this.setState({ debtOrder: JSON.stringify(signedDebtOrder), hash: hash });
+    console.log("Signed Debt Order at issuanceHash:", hash, "from debtor:",debtOrder.debtor)
+    console.log("Debt Order:", this.debtOrder)
   }
 
   async onApproveDAI(e) {
@@ -165,6 +170,7 @@ class App extends Component {
     await dai.methods
       .approve(collateralizedAddr, totalSupply)
       .send({ from: this.state.accounts[0] });
+    console.log("Approved DAI with total supply", totalSupply, "at account #: ", this.state.accounts[0] )
   }
 
   async onPostCollateral(e) {
@@ -173,9 +179,14 @@ class App extends Component {
       Collateralized.abi,
       Collateralized.networks[this.state.networkId].address
     );
+    const collateralRatio = 1.5 
+    const amount = this.state.principalAmount * collateralRatio
+    const lockupPeriodEndBlockNumber = 1000
+    console.log("Posted", amount, "DAI collateral")
     await collateralized.methods
-      .collateralize(this.state.hash, daiAddr, 10, 1000)
+      .collateralize(this.state.hash, daiAddr, amount, lockupPeriodEndBlockNumber)
       .send({ from: this.state.accounts[0] });
+    
   }
 
   async onFillOrder(e) {
@@ -225,33 +236,6 @@ class App extends Component {
 
             <h1>Short selling on the Dharma Protocol</h1>
             <h5><b>Offer DAI as collateral to create a Debt Order for an ERC 20</b></h5>
-            <div>
-                
-                  <Button
-                    bsStyle="primary"
-                    
-                  >
-                    About
-                  </Button>
-                  <Button
-                    bsStyle="primary"
-                    onClick={this.onGenerateDebtOrder}
-                  >
-                    Create Short
-                  </Button>
-                  <Button
-                    bsStyle="primary"
-                    onClick={this.onGenerateDebtOrder}
-                  >
-                    Relayer
-                  </Button>
-                  <Button
-                    bsStyle="primary"
-                    onClick={this.onGenerateDebtOrder}
-                  >
-                    Settle
-                  </Button>
-            </div>
 
             <form>
                <FormGroup
