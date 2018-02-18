@@ -12,6 +12,8 @@ import TokenRegistry from '../build/contracts/TokenRegistry.json'
 import DebtToken from '../build/contracts/DebtToken.json'
 import TermsContractRegistry from "../build/contracts/TermsContractRegistry.json"
 import ShortTermsContract from "../build/contracts/ShortTermsContract.json"
+import Collateralized from "../build/contracts/Collateralized.json"
+import DAI from "../build/contracts/DAI.json"
 
 import getWeb3 from './utils/getWeb3'
 
@@ -108,8 +110,6 @@ class App extends Component {
       };
       
       const debtOrder = await dharma.adapters.simpleInterestLoan.toDebtOrder(simpleInterestLoan);
-
-      console.log(debtOrder)
       
       this.setState({ debtOrder: JSON.stringify(debtOrder) });
   }
@@ -160,8 +160,13 @@ class App extends Component {
 
   async instantiateShortsell() {
     const networkId = await promisify(this.state.web3.version.getNetwork)();
-    const termsContract = this.state.web3.eth.contract(ShortTermsContract.abi).at(ShortTermsContract.networks[networkId].address);
-    const termLength = await promisify(termsContract.TERM_LENGTH.call)();
+
+    console.log(DAI)
+    console.log(DAI.networks)
+
+    const daiToken = this.state.web3.eth.contract(DAI.abi).at(DAI.networks[networkId].address);
+    const totalSupply = await promisify(daiToken.totalSupply.call());
+    // await promisify(DAI.approve(CollateralizedContract.networks[networkId].address, totalSupply));
   }
 
   render() {
