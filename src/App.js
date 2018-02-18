@@ -110,7 +110,7 @@ class App extends Component {
       };
       
       const debtOrder = await dharma.adapters.simpleInterestLoan.toDebtOrder(simpleInterestLoan);
-      
+      console.log('debt order')
       this.setState({ debtOrder: JSON.stringify(debtOrder) });
   }
   
@@ -127,7 +127,10 @@ class App extends Component {
       // Sign as debtor 
       const debtorSignature = await this.state.dharma.sign.asDebtor(debtOrder);
       const signedDebtOrder = Object.assign({ debtorSignature }, debtOrder);   
-            
+      console.log(debtOrder)
+      console.log(this.state.dharma)
+      const hash = await this.state.dharma.order.getIssuanceHash(signedDebtOrder); 
+      console.log("hash! ", hash)
       this.setState({ debtOrder: JSON.stringify(signedDebtOrder) });
   }
 
