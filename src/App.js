@@ -161,12 +161,9 @@ class App extends Component {
   async instantiateShortsell() {
     const networkId = await promisify(this.state.web3.version.getNetwork)();
 
-    console.log(DAI)
-    console.log(DAI.networks)
-
     const daiToken = this.state.web3.eth.contract(DAI.abi).at(DAI.networks[networkId].address);
-    const totalSupply = await promisify(daiToken.totalSupply.call());
-    // await promisify(DAI.approve(CollateralizedContract.networks[networkId].address, totalSupply));
+    const totalSupply = await promisify(daiToken.totalSupply.call)();
+    // await promisify(daiToken.approve(Collateralized.networks[networkId].address, totalSupply).send)();
   }
 
   render() {
