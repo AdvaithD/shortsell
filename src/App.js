@@ -154,7 +154,8 @@ class App extends Component {
     }
     
     const dharma = new Dharma(this.state.web3.currentProvider, dharmaConfig);
-    
+    console.log(dharma);
+
     this.setState({ dharma, accounts });
   }
 
@@ -165,7 +166,7 @@ class App extends Component {
     const totalSupply = await daiToken.methods.totalSupply().call();
 
     const collateralizedAddr = Collateralized.networks[networkId].address;
-    await daiToken.methods.approve(collateralizedAddr, totalSupply).send({ from: this.state.accounts[0] });
+    // await daiToken.methods.approve(collateralizedAddr, totalSupply).send({ from: this.state.accounts[0] });
 
     // Collateralize the contract (move DAI tokens over)
   }
