@@ -12,6 +12,9 @@ import TokenTransferProxy from '../build/contracts/TokenTransferProxy.json'
 import TokenRegistry from '../build/contracts/TokenRegistry.json'
 import DebtToken from '../build/contracts/DebtToken.json'
 import TermsContractRegistry from "../build/contracts/TermsContractRegistry.json"
+import ShortTermsContract from "../build/contracts/ShortTermsContract.json";
+import Collateralized from "../build/contracts/Collateralized.json";
+import DAI from "../build/contracts/DAI.json";
 
 import getWeb3 from './utils/getWeb3'
 
@@ -97,6 +100,7 @@ class App extends Component {
           termLength:  App.eventToBigNumber(e)
       });
   }
+
   static validateDebtOrder({ principalAmount, principalTokenSymbol,
                              interestRate, amortizationUnit, termLength }) {
       if (principalAmount <= 0) {
@@ -107,38 +111,51 @@ class App extends Component {
         throw new Error(`termLength must be > 0, not ${termLength}`)
       }
   }
-  async onGenerateDebtOrder(e) {
-      const { principalAmount, principalTokenSymbol, interestRate, amortizationUnit, termLength } = this.state;
-      // MARK: validate state
-      try {
-        App.validateDebtOrder({ principalAmount, principalTokenSymbol,
-                                interestRate, amortizationUnit, termLength })
-      } catch(err) {
-         this.props.alert.error(`${err}`)
-         return
-      }
-      const dharma = this.state.dharma;
 
-      const tokenRegistry = await dharma.contracts.loadTokenRegistry();
-      const principalToken = await tokenRegistry.getTokenAddress.callAsync(principalTokenSymbol);
-
-      const simpleInterestLoan = {
-          principalToken,
-          principalAmount,
-          interestRate,
-          amortizationUnit,
-          termLength
-      };
-
-      const debtOrder = await dharma.adapters.simpleInterestLoan.toDebtOrder(simpleInterestLoan);
-
-      this.setState({ debtOrder: JSON.stringify(debtOrder) });
-  }
   static validateDebtOrderObj(debtOrder) {
       if (!debtOrder) {
           throw new Error("No debt order has been generated yet!");
       }
       return JSON.parse(debtOrder);
+  }
+
+  async onGenerateDebtOrder(e) {
+    const {
+      principalAmount,
+      principalTokenSymbol,
+      interestRate,
+      amortizationUnit,
+      termLength
+    } = this.state;
+
+     try {
+        App.validateDebtOrder({ principalAmount, principalTokenSymbol,
+                                interestRate, amortizationUnit, termLength })
+      } catch(err) {
+         this.props.alert.error(`${err}`)
+         return
+    }
+    const dharma = this.state.dharma;
+
+    const tokenRegistry = await dharma.contracts.loadTokenRegistry();
+    const principalToken = await tokenRegistry.getTokenAddress.callAsync(
+      principalTokenSymbol
+    );
+
+     const simpleInterestLoan = {
+          principalToken,
+          principalAmount,
+          interestRate,
+          amortizationUnit,
+          termLength
+    };
+    const debtOrder = await dharma.adapters.simpleInterestLoan.toDebtOrder(
+      simpleInterestLoan
+    );
+    this.setState({ debtOrder: JSON.stringify(debtOrder) });
+    const tomorrow = new Date();
+    const repaymentDate = new Date(tomorrow.setDate(tomorrow.getDate() + termLength));
+    console.log("Generated a Debt Order of", principalAmount," ", this.state.principalTokenSymbol," at a", interestRate,"% interest rate to be repaid on", repaymentDate)
   }
 
   async onSignDebtOrder(e) {
@@ -150,14 +167,43 @@ class App extends Component {
         return
       }
 
-      debtOrder.principalAmount = new BigNumber(debtOrder.principalAmount);
-      debtOrder.debtor = this.state.accounts[0];
+    debtOrder.principalAmount = new BigNumber(debtOrder.principalAmount);
+    debtOrder.debtor = this.state.accounts[0];
 
-      // Sign as debtor
-      const debtorSignature = await this.state.dharma.sign.asDebtor(debtOrder);
-      const signedDebtOrder = Object.assign({ debtorSignature }, debtOrder);
+    // Sign as debtor
+    const debtorSignature = await this.state.dharma.sign.asDebtor(debtOrder);
+    const signedDebtOrder = Object.assign({ debtorSignature }, debtOrder);
+    const hash = await this.state.dharma.order.getIssuanceHash(signedDebtOrder);
+    this.setState({ debtOrder: JSON.stringify(signedDebtOrder), hash: hash });
+    console.log("Signed Debt Order at issuanceHash:", hash, "from debtor:", debtOrder.debtor)
+    console.log("Debt Order:", debtOrder)
+  }
 
-      this.setState({ debtOrder: JSON.stringify(signedDebtOrder) });
+  async onApproveDAI(e) {
+    const daiAddr = DAI.networks[this.state.networkId].address;
+    const dai = new this.state.web3.eth.Contract(DAI.abi, daiAddr);
+    const totalSupply = await dai.methods.totalSupply().call();
+    const collateralizedAddr =
+      Collateralized.networks[this.state.networkId].address;
+    await dai.methods
+      .approve(collateralizedAddr, totalSupply)
+      .send({ from: this.state.accounts[0] });
+    console.log("Approved DAI with total supply", totalSupply, "at account #: ", this.state.accounts[0] )
+  }
+
+  async onPostCollateral(e) {
+    const daiAddr = DAI.networks[this.state.networkId].address;
+    const collateralized = new this.state.web3.eth.Contract(
+      Collateralized.abi,
+      Collateralized.networks[this.state.networkId].address
+    );
+    const collateralRatio = 1.5
+    const amount = this.state.principalAmount * collateralRatio
+    const lockupPeriodEndBlockNumber = 1000
+    console.log("Posted", amount, "DAI collateral")
+    await collateralized.methods
+      .collateralize(this.state.hash, daiAddr, amount, lockupPeriodEndBlockNumber)
+      .send({ from: this.state.accounts[0] });
   }
 
   async instantiateDharma() {
@@ -186,7 +232,6 @@ class App extends Component {
 
     this.setState({ dharma, accounts });
   }
-
   render() {
     return (
       <div className="App">
@@ -195,6 +240,8 @@ class App extends Component {
             <div className="pure-u-1-1">
             <h1>ShortSell App</h1>
             <h3><b>Create your ShortSell Option:</b></h3>
+            <h1>Short selling on the Dharma Protocol</h1>
+            <h5><b>Offer DAI as collateral to create a Debt Order for an ERC 20</b></h5>
             <form>
                <FormGroup
                  controlId="formBasicText"
@@ -203,10 +250,12 @@ class App extends Component {
                  <FormControl
                    type="number"
                    placeholder="100.3"
+                   defaultValue={this.state.principalAmount}
                    onChange={this.handlePrincipalAmountChange}
                  />
                  <HelpBlock>Enter the amount of tokens you would like to borrow.</HelpBlock>
                </FormGroup>
+
                <FormGroup controlId="formControlsSelect">
                   <ControlLabel>Principal Token</ControlLabel>
                   <FormControl
@@ -218,8 +267,9 @@ class App extends Component {
                     <option value="MKR">Maker DAO (MKR)</option>
                     <option value="ZRX">0x Token (ZRX)</option>
                   </FormControl>
-                  <HelpBlock>Choose which token you would like to borrow.</HelpBlock>
-                </FormGroup>
+                  <HelpBlock>Choose which token you would like to short.</HelpBlock>
+              </FormGroup>
+
                 <FormGroup controlId="formControlsSelect">
                    <ControlLabel>Interest Rate</ControlLabel>
                    <FormControl
@@ -243,6 +293,7 @@ class App extends Component {
                     </FormControl>
                     <HelpBlock>Specify the Period of the agreement.</HelpBlock>
                   </FormGroup>
+
                   <FormGroup
                     controlId="formBasicText"
                   >
@@ -254,6 +305,10 @@ class App extends Component {
                     />
                     <HelpBlock>Enter the length of the entire debt agreement, in units of the chosen installments (e.g. a term length of 2 with an installment type of "monthly" would be equivalent to a 2 month long loan)</HelpBlock>
                   </FormGroup>
+              </form>
+
+                   { this.state.debtOrder ? <code>{this.state.debtOrder}</code> : null }
+
                   <Button
                     bsStyle="primary"
                     onClick={this.onGenerateDebtOrder}
@@ -267,9 +322,22 @@ class App extends Component {
                   >
                     Sign Debt Order
                   </Button>
-                  { this.state.debtOrder ? <code>{this.state.debtOrder}</code> : null }
 
-             </form>
+                <br />
+                <br />
+                <Button bsStyle="primary" onClick={this.onApproveDAI}>
+                  Approve DAI
+                </Button>
+                <br />
+                <br />
+                <Button bsStyle="primary" onClick={this.onPostCollateral}>
+                  Post Collateral
+                </Button>
+                <br />
+                <br />
+                <Button bsStyle="primary" onClick={this.onFillOrder}>
+                  Fill Order
+                </Button>
             </div>
           </div>
         </main>
