@@ -18,7 +18,7 @@ import "zeppelin-solidity/contracts/token/ERC20/ERC20.sol";
 import "../TermsContract.sol";
 import "../DebtRegistry.sol";
 
-contract Collateralized is TermsContract {
+contract Collateralized {
     using SafeMath for uint;
 
     struct Collateral {
@@ -30,6 +30,7 @@ contract Collateralized is TermsContract {
     }
 
     DebtRegistry public debtRegistry;
+    TermsContract public termsContract;
     mapping(bytes32 => Collateral) public collaterals;
 
     event CollateralLocked(
@@ -52,8 +53,9 @@ contract Collateralized is TermsContract {
         uint amount
     );
 
-    function Collateralized(address _debtRegistry) public {
+    function Collateralized(address _debtRegistry, address _termsContract) public {
         debtRegistry = DebtRegistry(_debtRegistry);
+        termsContract = TermsContract(_termsContract);
     }
 
     function collateralize(
@@ -104,8 +106,8 @@ contract Collateralized is TermsContract {
 
         // check if expected value has been paid
         require(
-            getExpectedRepaymentValue(issuanceCommitmentHash, block.number) <=
-            getValueRepaidToDate(issuanceCommitmentHash)
+            termsContract.getExpectedRepaymentValue(issuanceCommitmentHash, block.number) <=
+            termsContract.getValueRepaidToDate(issuanceCommitmentHash)
         );
 
         // withdrawn collateral
@@ -136,8 +138,8 @@ contract Collateralized is TermsContract {
 
         // check if expected value hasn't been paid
         require(
-            getExpectedRepaymentValue(issuanceCommitmentHash, block.number) >
-            getValueRepaidToDate(issuanceCommitmentHash)
+            termsContract.getExpectedRepaymentValue(issuanceCommitmentHash, block.number) >
+            termsContract.getValueRepaidToDate(issuanceCommitmentHash)
         );
 
         // seize collateral
