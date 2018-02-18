@@ -45,6 +45,9 @@ class App extends Component {
 
     this.onGenerateDebtOrder = this.onGenerateDebtOrder.bind(this);
     this.onSignDebtOrder = this.onSignDebtOrder.bind(this);
+    this.onApproveDAI = this.onApproveDAI.bind(this);
+    this.onPostCollateral = this.onPostCollateral.bind(this);
+    this.onFillOrder = this.onFillOrder.bind(this);
 
     this.state = {
       principalAmount: 100,
@@ -68,9 +71,12 @@ class App extends Component {
           web3: results.web3
         });
 
+        results.web3.eth.getBlockNumber().then((result) => {
+          console.log(result);
+        });
+
         // Instantiate contract once web3 provided.
         this.instantiateDharma();
-        this.instantiateShortsell();
       })
       .catch(e => {
         console.log("Error instantiating Dharma contracts:" + e);
@@ -134,7 +140,6 @@ class App extends Component {
     const debtOrder = await dharma.adapters.simpleInterestLoan.toDebtOrder(
       simpleInterestLoan
     );
-    console.log(this.state);
     this.setState({ debtOrder: JSON.stringify(debtOrder) });
   }
 
@@ -151,11 +156,29 @@ class App extends Component {
     // Sign as debtor
     const debtorSignature = await this.state.dharma.sign.asDebtor(debtOrder);
     const signedDebtOrder = Object.assign({ debtorSignature }, debtOrder);
-    console.log(debtOrder);
-    console.log(this.state.dharma);
     const hash = await this.state.dharma.order.getIssuanceHash(signedDebtOrder);
-    console.log("hash! ", hash);
     this.setState({ debtOrder: JSON.stringify(signedDebtOrder), hash: hash });
+  }
+
+  async onApproveDAI(e) {
+    const daiAddr = DAI.networks[this.state.networkId].address;
+    const dai = new this.state.web3.eth.Contract(DAI.abi, daiAddr);
+    const totalSupply = await dai.methods.totalSupply().call();
+    const collateralizedAddr = Collateralized.networks[this.state.networkId].address;
+    await dai.methods.approve(collateralizedAddr, totalSupply).send({ from: this.state.accounts[0] })
+  }
+
+  async onPostCollateral(e) {
+    const daiAddr = DAI.networks[this.state.networkId].address;
+    const collateralized = new this.state.web3.eth.Contract(
+      Collateralized.abi,
+      Collateralized.networks[this.state.networkId].address
+    );
+    await collateralized.methods.collateralize(this.state.hash, daiAddr, 1000, 500).send({ from: this.state.accounts[0] });
+  }
+
+  async onFillOrder(e) {
+    console.log("FILL ORDER!");
   }
 
   async instantiateDharma() {
@@ -188,28 +211,7 @@ class App extends Component {
 
     const dharma = new Dharma(this.state.web3.currentProvider, dharmaConfig);
 
-    this.setState({ dharma, accounts });
-  }
-
-  async instantiateShortsell() {
-    const networkId = await promisify(this.state.web3.eth.net.getId)();
-
-    const daiAddr = DAI.networks[networkId].address;
-    const dai = new this.state.web3.eth.Contract(DAI.abi, daiAddr);
-    const totalSupply = await dai.methods.totalSupply().call();
-
-    // const collateralizedAddr = Collateralized.networks[networkId].address;
-    // await dai.methods
-    //   .approve(collateralizedAddr, totalSupply)
-    //   .send({ from: this.state.accounts[0] })
-    //   .then(async () => {
-    //     // Collateralize the contract (move DAI tokens over)
-    //     const collateralized = new this.state.web3.eth.Contract(
-    //       Collateralized.abi,
-    //       Collateralized.networks[networkId].address
-    //     );
-    //     // await collateralized.methods.collateralize(, daiAddr, 1, 7000000).send({ from: this.state.accounts[0] });
-    //   });
+    this.setState({ dharma, accounts, networkId });
   }
 
   render() {
@@ -273,6 +275,21 @@ class App extends Component {
                 <br />
                 <Button bsStyle="primary" onClick={this.onSignDebtOrder}>
                   Sign Debt Order
+                </Button>
+                <br />
+                <br />
+                <Button bsStyle="primary" onClick={this.onApproveDAI}>
+                  Approve DAI
+                </Button>
+                <br />
+                <br />
+                <Button bsStyle="primary" onClick={this.onPostCollateral}>
+                  Post Collateral
+                </Button>
+                <br />
+                <br />
+                <Button bsStyle="primary" onClick={this.onFillOrder}>
+                  Fill Order
                 </Button>
                 <code>{this.state.debtOrder}</code>
               </form>
