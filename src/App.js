@@ -132,7 +132,7 @@ class App extends Component {
   }
 
   async instantiateDharma() {
-    const networkId = await promisify(this.state.web3.version.getNetwork)();
+    const networkId = await promisify(this.state.web3.eth.net.getId)();
     const accounts = await promisify(this.state.web3.eth.getAccounts)();
     
     if (!(networkId in DebtKernel.networks &&
@@ -159,11 +159,15 @@ class App extends Component {
   }
 
   async instantiateShortsell() {
-    const networkId = await promisify(this.state.web3.version.getNetwork)();
+    const networkId = await promisify(this.state.web3.eth.net.getId)();
 
-    const daiToken = this.state.web3.eth.contract(DAI.abi).at(DAI.networks[networkId].address);
-    const totalSupply = await promisify(daiToken.totalSupply.call)();
-    // await promisify(daiToken.approve(Collateralized.networks[networkId].address, totalSupply).send)();
+    const daiToken = new this.state.web3.eth.Contract(DAI.abi, DAI.networks[networkId].address);
+    const totalSupply = await daiToken.methods.totalSupply().call();
+
+    const collateralizedAddr = Collateralized.networks[networkId].address;
+    await daiToken.methods.approve(collateralizedAddr, totalSupply).send({ from: this.state.accounts[0] });
+
+    // Collateralize the contract (move DAI tokens over)
   }
 
   render() {
