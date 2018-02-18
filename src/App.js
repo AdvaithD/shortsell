@@ -37,11 +37,13 @@ class App extends Component {
     this.onSignDebtOrder = this.onSignDebtOrder.bind(this);
     this.onApproveDAI = this.onApproveDAI.bind(this);
     this.onPostCollateral = this.onPostCollateral.bind(this);
+    this.onFillOrder = this.onFillOrder.bind(this);
 
     this.state = {
       web3: null,
       dharma: null,
       account: null,
+      accounts: null,
       networkId: null,
       principalAmount: new BigNumber(0),
       principalTokenSymbol: "REP",
@@ -210,11 +212,19 @@ class App extends Component {
       .send({ from: this.state.account });
   }
 
+  async onFillOrder(e) {
+    console.log('Order', this.state.debtOrder)
+    await this.state.dharma.order.fillAsync(this.state.debtOrder, {
+      from: this.state.accounts[1]
+    });
+  }
+
   async instantiateDharma() {
     const networkId = await this.state.web3.eth.net.getId();
-    // const account = await this.state.web3.eth.accounts.create(this.state.web3.utils.randomHex(32));
     const accounts = await this.state.web3.eth.getAccounts()
     const account = accounts[0];
+    const secondAccount = await this.state.web3.eth.accounts.create(this.state.web3.utils.randomHex(32));
+
     if (!(networkId in DebtKernel.networks &&
           networkId in RepaymentRouter.networks &&
           networkId in TokenTransferProxy.networks &&
@@ -224,9 +234,12 @@ class App extends Component {
         throw new Error("Cannot find Dharma smart contracts on current Ethereum network.");
     } else if (!account) {
       throw new Error("No account generated");
+    } else if (accounts.length < 2 ) {
+      console.warn("Need > 1 account");
+      accounts.push(secondAccount)
     }
-
-    console.log("Account", account);
+    console.log("Primary Account", account);
+    console.log("All Accounts", accounts);
 
     const dharmaConfig = {
         kernelAddress: DebtKernel.networks[networkId].address,
@@ -239,7 +252,7 @@ class App extends Component {
 
     const dharma = new Dharma(this.state.web3.currentProvider, dharmaConfig);
 
-    this.setState({ dharma, account, networkId });
+    this.setState({ dharma, account, accounts, networkId });
   }
   render() {
     return (
