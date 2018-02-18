@@ -10,6 +10,7 @@ import DebtKernel from '../build/contracts/DebtKernel.json'
 import RepaymentRouter from '../build/contracts/RepaymentRouter.json'
 import TokenTransferProxy from '../build/contracts/TokenTransferProxy.json'
 import TokenRegistry from '../build/contracts/TokenRegistry.json'
+import DebtRegistry from '../build/contracts/DebtRegistry.json'
 import DebtToken from '../build/contracts/DebtToken.json'
 import TermsContractRegistry from "../build/contracts/TermsContractRegistry.json"
 import ShortTermsContract from "../build/contracts/ShortTermsContract.json";
@@ -215,7 +216,7 @@ class App extends Component {
   async onFillOrder(e) {
     console.log('Order', this.state.debtOrder)
     await this.state.dharma.order.fillAsync(this.state.debtOrder, {
-      from: this.state.accounts[1]
+      from: this.state.account
     });
   }
 
@@ -247,6 +248,7 @@ class App extends Component {
         tokenTransferProxyAddress: TokenTransferProxy.networks[networkId].address,
         tokenRegistryAddress: TokenRegistry.networks[networkId].address,
         debtTokenAddress: DebtToken.networks[networkId].address,
+        debtRegistryAddress: DebtRegistry.networks[networkId].address,
         termsContractRegistry: TermsContractRegistry.networks[networkId].address
     }
 
