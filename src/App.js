@@ -122,7 +122,7 @@ class App extends Component {
       const debtOrder = JSON.parse(this.state.debtOrder);
           
       debtOrder.principalAmount = new BigNumber(debtOrder.principalAmount);
-        debtOrder.debtor = this.state.accounts[0];        
+      debtOrder.debtor = this.state.accounts[0];        
     
       // Sign as debtor 
       const debtorSignature = await this.state.dharma.sign.asDebtor(debtOrder);
@@ -154,7 +154,6 @@ class App extends Component {
     }
     
     const dharma = new Dharma(this.state.web3.currentProvider, dharmaConfig);
-    console.log(dharma);
 
     this.setState({ dharma, accounts });
   }
@@ -162,13 +161,16 @@ class App extends Component {
   async instantiateShortsell() {
     const networkId = await promisify(this.state.web3.eth.net.getId)();
 
-    const daiToken = new this.state.web3.eth.Contract(DAI.abi, DAI.networks[networkId].address);
-    const totalSupply = await daiToken.methods.totalSupply().call();
+    const dai = new this.state.web3.eth.Contract(DAI.abi, DAI.networks[networkId].address);
+    const totalSupply = await dai.methods.totalSupply().call();
 
     const collateralizedAddr = Collateralized.networks[networkId].address;
-    // await daiToken.methods.approve(collateralizedAddr, totalSupply).send({ from: this.state.accounts[0] });
+    await dai.methods.approve(collateralizedAddr, totalSupply).send({ from: this.state.accounts[0] }).then(() => {
+        // Collateralize the contract (move DAI tokens over)
+        const collateralized = new this.state.web3.eth.Contract(Collateralized.abi, Collateralized.networks[networkId].address)
+        await collateralized.methods.collateralize()
+    });
 
-    // Collateralize the contract (move DAI tokens over)
   }
 
   render() {
