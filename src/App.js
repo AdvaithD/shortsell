@@ -29,18 +29,21 @@ class App extends Component {
     this.handlePrincipalAmountChange = this.handlePrincipalAmountChange.bind(this);
     this.handlePrincipalTokenChange = this.handlePrincipalTokenChange.bind(this);
     this.handleInterestRateChange = this.handleInterestRateChange.bind(this);
-    this.handleInstallmentsTypeChange = this.handleInstallmentsTypeChange.bind(this);
+    //this.handleInstallmentsTypeChange = this.handleInstallmentsTypeChange.bind(this);
     this.handleTermLengthChange = this.handleTermLengthChange.bind(this);
 
     this.onGenerateDebtOrder = this.onGenerateDebtOrder.bind(this);
     this.onSignDebtOrder = this.onSignDebtOrder.bind(this);
 
     this.state = {
+      principalAmount: 100,
+      interestRate: 10, 
+      termLength: 30,
       storageValue: 0,
       web3: null,
       dharma: null,
       principalTokenSymbol: "REP",
-      amortizationUnit: "hours",
+      amortizationUnit: "months",
     }
   }
 
@@ -110,7 +113,7 @@ class App extends Component {
       };
       
       const debtOrder = await dharma.adapters.simpleInterestLoan.toDebtOrder(simpleInterestLoan);
-      console.log('debt order')
+      console.log(this.state)
       this.setState({ debtOrder: JSON.stringify(debtOrder) });
   }
   
@@ -175,8 +178,8 @@ class App extends Component {
         <main className="container">
           <div className="pure-g">
             <div className="pure-u-1-1">
-            <h1>Dharma Javascript Library Starter Kit</h1>
-            <h3><b>Generate a simple loan request:</b></h3>
+            <h1>ShortSell on Dharma Protocol</h1>
+            <h5><b>Stake DAI to borrow ERC-20s, and bet on their price dropping. By Max Wolff, Zach Zeleznick, and Rich McAteer</b></h5>
             <form>
                <FormGroup
                  controlId="formBasicText"
@@ -184,7 +187,7 @@ class App extends Component {
                  <ControlLabel>Principal Amount</ControlLabel>
                  <FormControl
                    type="number"
-                   placeholder="100.3"
+                   defaultValue={this.state.principalAmount}
                    onChange={this.handlePrincipalAmountChange}
                  />
                  <HelpBlock>Enter the amount of tokens you would like to borrow.</HelpBlock>
@@ -194,49 +197,31 @@ class App extends Component {
                   <FormControl 
                     componentClass="select" 
                     placeholder="select"
-                    onChange={this.handlePrincipalTokenChange}
+                    onChange={this.shandlePrincipalTokenChange}
                 >
                     <option value="REP">Augur (REP)</option>
                     <option value="MKR">Maker DAO (MKR)</option>
                     <option value="ZRX">0x Token (ZRX)</option>
                   </FormControl>
-                  <HelpBlock>Choose which token you would like to borrow.</HelpBlock>
                 </FormGroup>
                 <FormGroup controlId="formControlsSelect">
-                   <ControlLabel>Interest Rate</ControlLabel>
+                   <ControlLabel>Interest Rate (%)</ControlLabel>
                    <FormControl
                      type="number"
                      step="0.001"
-                     placeholder="8.12%"
+                     defaultValue={this.state.interestRate}
                      onChange={this.handleInterestRateChange}
                    />
-                   <HelpBlock>Specify your desired interest rate.</HelpBlock>
                  </FormGroup>
-                 <FormGroup controlId="formControlsSelect">
-                    <ControlLabel>Intstallments Type</ControlLabel>
-                    <FormControl 
-                        componentClass="select"
-                        placeholder="select"
-                        onChange={this.handleInstallmentsTypeChange}
-                    >
-                      <option value="hours">Hourly</option>
-                      <option value="days">Daily</option>
-                      <option value="weeks">Weekly</option>
-                      <option value="months">Monthly</option>
-                      <option value="years">Yearly</option>
-                    </FormControl>
-                    <HelpBlock>Specify how often you would like repayments to be due.</HelpBlock>
-                  </FormGroup>
                   <FormGroup
                     controlId="formBasicText"
                   >
-                    <ControlLabel>Term Length</ControlLabel>
+                    <ControlLabel>Term Length (days)</ControlLabel>
                     <FormControl
                       type="number"
-                      placeholder="3"
+                      defaultValue={this.state.termLength}
                       onChange={this.handleTermLengthChange}
                     />
-                    <HelpBlock>Enter the length of the entire debt agreement, in units of the chosen installments (e.g. a term length of 2 with an installment type of "monthly" would be equivalent to a 2 month long loan)</HelpBlock>
                   </FormGroup>
                   <Button
                     bsStyle="primary"
