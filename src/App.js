@@ -238,8 +238,6 @@ class App extends Component {
         <main className="container">
           <div className="pure-g">
             <div className="pure-u-1-1">
-            <h1>ShortSell App</h1>
-            <h3><b>Create your ShortSell Option:</b></h3>
             <h1>Short selling on the Dharma Protocol</h1>
             <h5><b>Offer DAI as collateral to create a Debt Order for an ERC 20</b></h5>
             <form>
@@ -249,8 +247,7 @@ class App extends Component {
                  <ControlLabel>Principal Amount</ControlLabel>
                  <FormControl
                    type="number"
-                   placeholder="100.3"
-                   defaultValue={this.state.principalAmount}
+                   placeholder="100"
                    onChange={this.handlePrincipalAmountChange}
                  />
                  <HelpBlock>Enter the amount of tokens you would like to borrow.</HelpBlock>
