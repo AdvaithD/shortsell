@@ -179,13 +179,13 @@ class App extends Component {
   }
 
   async onFillOrder(e) {
-    await this.state.dharma.order.fillAsync(this.state.order, {
+    await this.state.dharma.order.fillAsync(this.state.debtOrder, {
       from: this.state.accounts[1]
     });
   }
 
   async instantiateDharma() {
-    const networkId = await promisify(this.state.web3.eth.net.getId)();
+    const networkId = await promisify(this.state.web3.version.getNetwork)();
     const accounts = await promisify(this.state.web3.eth.getAccounts)();
 
     if (

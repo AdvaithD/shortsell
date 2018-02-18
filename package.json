@@ -52,7 +52,7 @@
     "@dharmaprotocol/dharma.js": "^0.0.13",
     "NonFungibleToken": "https://github.com/dharmaprotocol/NonFungibleToken",
     "bignumber": "^1.1.0",
-    "bignumber.js": "^6.0.0",
+    "bignumber.js": "^5.0.0",
     "bootstrap": "^4.0.0",
     "dotenv": "^2.0.0",
     "ganache-cli": "^6.0.3",
@@ -60,7 +60,6 @@
     "react-bootstrap": "^0.32.1",
     "react-dom": "^15.4.2",
     "tiny-promisify": "^1.0.0",
-    "web3": "^1.0.0-beta.30",
     "truffle": "4.0.3",
     "zeppelin-solidity": "^1.6.0"
   },
