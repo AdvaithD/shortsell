@@ -41,6 +41,7 @@ class App extends Component {
     this.state = {
       web3: null,
       dharma: null,
+      account: null,
       networkId: null,
       principalAmount: new BigNumber(0),
       principalTokenSymbol: "REP",
@@ -171,7 +172,7 @@ class App extends Component {
       }
 
     debtOrder.principalAmount = new BigNumber(debtOrder.principalAmount);
-    debtOrder.debtor = this.state.accounts[0];
+    debtOrder.debtor = this.state.account //.address;
 
     // Sign as debtor
     const debtorSignature = await this.state.dharma.sign.asDebtor(debtOrder);
@@ -190,8 +191,8 @@ class App extends Component {
       Collateralized.networks[this.state.networkId].address;
     await dai.methods
       .approve(collateralizedAddr, totalSupply)
-      .send({ from: this.state.accounts[0] });
-    console.log("Approved DAI with total supply", totalSupply, "at account #: ", this.state.accounts[0] )
+      .send({ from: this.state.account});
+    console.log("Approved DAI with total supply", totalSupply, "at account #: ", this.state.account)
   }
 
   async onPostCollateral(e) {
@@ -206,13 +207,14 @@ class App extends Component {
     console.log("Posted", amount, "DAI collateral")
     await collateralized.methods
       .collateralize(this.state.hash, daiAddr, amount, lockupPeriodEndBlockNumber)
-      .send({ from: this.state.accounts[0] });
+      .send({ from: this.state.account });
   }
 
   async instantiateDharma() {
     const networkId = await this.state.web3.eth.net.getId();
-    const accounts = await this.state.web3.eth.accounts;
-
+    // const account = await this.state.web3.eth.accounts.create(this.state.web3.utils.randomHex(32));
+    const accounts = await this.state.web3.eth.getAccounts()
+    const account = accounts[0];
     if (!(networkId in DebtKernel.networks &&
           networkId in RepaymentRouter.networks &&
           networkId in TokenTransferProxy.networks &&
@@ -220,7 +222,11 @@ class App extends Component {
           networkId in DebtToken.networks &&
           networkId in TermsContractRegistry.networks)) {
         throw new Error("Cannot find Dharma smart contracts on current Ethereum network.");
+    } else if (!account) {
+      throw new Error("No account generated");
     }
+
+    console.log("Account", account);
 
     const dharmaConfig = {
         kernelAddress: DebtKernel.networks[networkId].address,
@@ -233,7 +239,7 @@ class App extends Component {
 
     const dharma = new Dharma(this.state.web3.currentProvider, dharmaConfig);
 
-    this.setState({ dharma, accounts, networkId });
+    this.setState({ dharma, account, networkId });
   }
   render() {
     return (
