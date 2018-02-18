@@ -50,7 +50,7 @@
     "whatwg-fetch": "1.0.0"
   },
   "dependencies": {
-    "@dharmaprotocol/dharma.js": "^0.0.13",
+    "@dharmaprotocol/dharma.js": "file:/Users/zeleznick/dharma.js/dist",
     "NonFungibleToken": "https://github.com/dharmaprotocol/NonFungibleToken",
     "bignumber.js": "^5.0.0",
     "bootstrap": "^4.0.0",
@@ -69,6 +69,7 @@
     "react-router-dom": "^4.2.2",
     "tiny-promisify": "^1.0.0",
     "truffle": "4.0.3",
+    "web3": "1.0.0-beta.30",
     "zeppelin-solidity": "^1.6.0"
   },
   "scripts": {

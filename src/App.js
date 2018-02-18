@@ -35,10 +35,13 @@ class App extends Component {
 
     this.onGenerateDebtOrder = this.onGenerateDebtOrder.bind(this);
     this.onSignDebtOrder = this.onSignDebtOrder.bind(this);
+    this.onApproveDAI = this.onApproveDAI.bind(this);
+    this.onPostCollateral = this.onPostCollateral.bind(this);
 
     this.state = {
       web3: null,
       dharma: null,
+      networkId: null,
       principalAmount: new BigNumber(0),
       principalTokenSymbol: "REP",
       amortizationUnit: "hours",
@@ -207,8 +210,8 @@ class App extends Component {
   }
 
   async instantiateDharma() {
-    const networkId = await promisify(this.state.web3.version.getNetwork)();
-    const accounts = await promisify(this.state.web3.eth.getAccounts)();
+    const networkId = await this.state.web3.eth.net.getId();
+    const accounts = await this.state.web3.eth.accounts;
 
     if (!(networkId in DebtKernel.networks &&
           networkId in RepaymentRouter.networks &&
@@ -230,7 +233,7 @@ class App extends Component {
 
     const dharma = new Dharma(this.state.web3.currentProvider, dharmaConfig);
 
-    this.setState({ dharma, accounts });
+    this.setState({ dharma, accounts, networkId });
   }
   render() {
     return (
