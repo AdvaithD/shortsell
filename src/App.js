@@ -71,10 +71,6 @@ class App extends Component {
           web3: results.web3
         });
 
-        results.web3.eth.getBlockNumber().then((result) => {
-          console.log(result);
-        });
-
         // Instantiate contract once web3 provided.
         this.instantiateDharma();
       })
@@ -164,8 +160,11 @@ class App extends Component {
     const daiAddr = DAI.networks[this.state.networkId].address;
     const dai = new this.state.web3.eth.Contract(DAI.abi, daiAddr);
     const totalSupply = await dai.methods.totalSupply().call();
-    const collateralizedAddr = Collateralized.networks[this.state.networkId].address;
-    await dai.methods.approve(collateralizedAddr, totalSupply).send({ from: this.state.accounts[0] })
+    const collateralizedAddr =
+      Collateralized.networks[this.state.networkId].address;
+    await dai.methods
+      .approve(collateralizedAddr, totalSupply)
+      .send({ from: this.state.accounts[0] });
   }
 
   async onPostCollateral(e) {
@@ -174,11 +173,15 @@ class App extends Component {
       Collateralized.abi,
       Collateralized.networks[this.state.networkId].address
     );
-    await collateralized.methods.collateralize(this.state.hash, daiAddr, 1000, 500).send({ from: this.state.accounts[0] });
+    await collateralized.methods
+      .collateralize(this.state.hash, daiAddr, 10, 1000)
+      .send({ from: this.state.accounts[0] });
   }
 
   async onFillOrder(e) {
-    console.log("FILL ORDER!");
+    await this.state.dharma.order.fillAsync(this.state.order, {
+      from: this.state.accounts[1]
+    });
   }
 
   async instantiateDharma() {
