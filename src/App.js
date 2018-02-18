@@ -161,14 +161,15 @@ class App extends Component {
   async instantiateShortsell() {
     const networkId = await promisify(this.state.web3.eth.net.getId)();
 
-    const dai = new this.state.web3.eth.Contract(DAI.abi, DAI.networks[networkId].address);
+    const daiAddr = DAI.networks[networkId].address;
+    const dai = new this.state.web3.eth.Contract(DAI.abi, daiAddr);
     const totalSupply = await dai.methods.totalSupply().call();
 
     const collateralizedAddr = Collateralized.networks[networkId].address;
-    await dai.methods.approve(collateralizedAddr, totalSupply).send({ from: this.state.accounts[0] }).then(() => {
+    await dai.methods.approve(collateralizedAddr, totalSupply).send({ from: this.state.accounts[0] }).then(async () => {
         // Collateralize the contract (move DAI tokens over)
         const collateralized = new this.state.web3.eth.Contract(Collateralized.abi, Collateralized.networks[networkId].address)
-        await collateralized.methods.collateralize()
+        // await collateralized.methods.collateralize(, daiAddr, 1, 7000000).send({ from: this.state.accounts[0] });
     });
 
   }
