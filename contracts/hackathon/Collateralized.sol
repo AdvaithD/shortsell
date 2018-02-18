@@ -74,7 +74,7 @@ contract Collateralized {
 
         // take tokens as collateral
         require(ERC20(token).transferFrom(
-            collateral.collateralizer,
+            msg.sender,
             address(this),
             amount
         ));

@@ -60,6 +60,7 @@
     "react-bootstrap": "^0.32.1",
     "react-dom": "^15.4.2",
     "tiny-promisify": "^1.0.0",
+    "web3": "^1.0.0-beta.30",
     "truffle": "4.0.3",
     "zeppelin-solidity": "^1.6.0"
   },
