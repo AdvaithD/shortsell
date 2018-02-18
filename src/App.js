@@ -171,15 +171,42 @@ class App extends Component {
     const totalSupply = await promisify(daiToken.totalSupply.call)();
     // await promisify(daiToken.approve(Collateralized.networks[networkId].address, totalSupply).send)();
   }
-
   render() {
     return (
       <div className="App">
         <main className="container">
           <div className="pure-g">
             <div className="pure-u-1-1">
-            <h1>ShortSell on Dharma Protocol</h1>
-            <h5><b>Stake DAI to borrow ERC-20s, and bet on their price dropping. By Max Wolff, Zach Zeleznick, and Rich McAteer</b></h5>
+            <h1>Short selling on the Dharma Protocol</h1>
+            <h5><b>Offer DAI as collateral to create a Debt Order for an ERC 20</b></h5>
+            <div>
+                
+                  <Button
+                    bsStyle="primary"
+                    
+                  >
+                    About
+                  </Button>
+                  <Button
+                    bsStyle="primary"
+                    onClick={this.onGenerateDebtOrder}
+                  >
+                    Create Short
+                  </Button>
+                  <Button
+                    bsStyle="primary"
+                    onClick={this.onGenerateDebtOrder}
+                  >
+                    Relayer
+                  </Button>
+                  <Button
+                    bsStyle="primary"
+                    onClick={this.onGenerateDebtOrder}
+                  >
+                    Settle
+                  </Button>
+            </div>
+
             <form>
                <FormGroup
                  controlId="formBasicText"
@@ -192,6 +219,7 @@ class App extends Component {
                  />
                  <HelpBlock>Enter the amount of tokens you would like to borrow.</HelpBlock>
                </FormGroup>
+
                <FormGroup controlId="formControlsSelect">
                   <ControlLabel>Principal Token</ControlLabel>
                   <FormControl 
@@ -204,6 +232,8 @@ class App extends Component {
                     <option value="ZRX">0x Token (ZRX)</option>
                   </FormControl>
                 </FormGroup>
+
+
                 <FormGroup controlId="formControlsSelect">
                    <ControlLabel>Interest Rate (%)</ControlLabel>
                    <FormControl
@@ -239,6 +269,7 @@ class App extends Component {
                   <code>{this.state.debtOrder}</code>
                   
              </form>
+             <p> Max Wolff, Zach Zeleznick, and Rich McAteer</p>
             </div>
           </div>
         </main>
