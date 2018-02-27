@@ -9,6 +9,6 @@ module.exports = (deployer, network, accounts) => {
         // Deploy DAI for collateral
         await deployer.deploy(DAI, accounts[0], 1000 * Math.pow(10, 18));
         // Deploy collateral
-        await deployer.deploy(Collateralized, DebtRegistry.address);
+        await deployer.deploy(Collateralized, DebtRegistry.address, ShortTermsContract.address);
     });
 };

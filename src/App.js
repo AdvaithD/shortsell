@@ -72,7 +72,7 @@ class App extends Component {
         });
 
         // Instantiate contract once web3 provided.
-        this.instantiateDharma();
+        this.instantiateDharma(results.web3);
       })
       .catch(e => {
         console.log("Error instantiating Dharma contracts:" + e);
@@ -158,6 +158,7 @@ class App extends Component {
 
   async onApproveDAI(e) {
     const daiAddr = DAI.networks[this.state.networkId].address;
+    console.log(this.state.web3);
     const dai = new this.state.web3.eth.Contract(DAI.abi, daiAddr);
     const totalSupply = await dai.methods.totalSupply().call();
     const collateralizedAddr =
@@ -184,9 +185,10 @@ class App extends Component {
     });
   }
 
-  async instantiateDharma() {
-    const networkId = await promisify(this.state.web3.version.getNetwork)();
-    const accounts = await promisify(this.state.web3.eth.getAccounts)();
+  async instantiateDharma(web3) {
+    console.log(web3);
+    const networkId = await promisify(web3.eth.net.getId)();
+    const accounts = await promisify(web3.eth.getAccounts)();
 
     if (
       !(
@@ -212,7 +214,7 @@ class App extends Component {
       termsContractRegistry: TermsContractRegistry.networks[networkId].address
     };
 
-    const dharma = new Dharma(this.state.web3.currentProvider, dharmaConfig);
+    const dharma = new Dharma(web3.currentProvider, dharmaConfig);
 
     this.setState({ dharma, accounts, networkId });
   }
